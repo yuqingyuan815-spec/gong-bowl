@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>锣 / 钵</title>
+<style>
+  :root{
+    --bg: #15120f;
+    --bg-2: #1c1712;
+    --bronze: #c89b5f;
+    --bronze-deep: #8b5a2b;
+    --ink: #ede6da;
+    --ink-dim: #a99a85;
+    --ring: rgba(200,155,95,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at 50% 20%, var(--bg-2), var(--bg) 70%);
+    color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+  }
+  .stage{
+    height:100dvh; width:100vw;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 24px;
+    position:relative;
+  }
+  .title{
+    position:absolute; top:max(20px, env(safe-area-inset-top)); left:0; right:0;
+    text-align:center;
+    letter-spacing: 0.3em;
+    font-size: 12px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .switcher{
+    display:flex; gap:10px;
+    margin-bottom: 36px;
+    position:relative; z-index:5;
+  }
+  .switcher button{
+    background:none;
+    border: 1px solid rgba(200,155,95,0.3);
+    color: var(--ink-dim);
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    font-family: inherit;
+    cursor:pointer;
+    transition: all 0.25s ease;
+  }
+  .switcher button.active{
+    color: var(--bg);
+    background: var(--bronze);
+    border-color: var(--bronze);
+  }
+
+  .instrument-wrap{
+    position:relative;
+    width: min(78vw, 360px);
+    height: min(78vw, 360px);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- GONG ---------- */
+  .gong-scene{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    border: 2px solid var(--ring);
+    opacity:0;
+    pointer-events:none;
+  }
+  .gong{
+    position:relative;
+    width: 78%;
+    height: 78%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, #e8c98a, #c89b5f 40%, #8b5a2b 78%, #5c3a1a 100%);
+    box-shadow:
+      0 0 0 6px #241a10,
+      0 20px 50px rgba(0,0,0,0.6),
+      inset 0 0 40px rgba(0,0,0,0.35);
+    cursor:pointer;
+    transform: scale(1);
+    transition: transform 0.08s ease-out, filter 0.08s ease-out;
+  }
+  .gong::before{
+    content:'';
+    position:absolute; inset: 14%;
+    border-radius:50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,235,200,0.35), transparent 60%);
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.4);
+  }
+  .gong::after{
+    content:'';
+    position:absolute; inset: 40%;
+    border-radius:50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255,240,210,0.5), rgba(139,90,43,0.2) 70%);
+  }
+  .gong.hit{
+    animation: gongShake 0.5s ease-out;
+    filter: brightness(1.6);
+  }
+  @keyframes gongShake{
+    0%{ transform: scale(0.96); }
+    15%{ transform: scale(1.02) rotate(0.6deg); }
+    30%{ transform: scale(0.995) rotate(-0.5deg); }
+    45%{ transform: scale(1.008) rotate(0.3deg); }
+    60%{ transform: scale(0.998) rotate(-0.15deg); }
+    100%{ transform: scale(1) rotate(0deg); }
+  }
+  .mallet{
+    position:absolute;
+    width: 14px; height: 90px;
+    left: 50%; top: -70px;
+    transform-origin: top center;
+    transform: translateX(-50%) rotate(-38deg);
+    transition: transform 0.14s cubic-bezier(.4,0,.2,1);
+    pointer-events:none;
+    z-index: 3;
+  }
+  .mallet .stick{
+    width: 6px; height: 78px; margin: 0 auto;
+    background: linear-gradient(#7a5230, #4a3018);
+    border-radius: 3px;
+  }
+  .mallet .head{
+    width: 26px; height: 26px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #4a3830, #1f1712);
+    margin: -6px auto 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  }
+  .mallet.swing{
+    transform: translateX(-50%) rotate(18deg);
+  }
+
+  /* ---------- BOWL ---------- */
+  .bowl-scene{ position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+  .bowl-ripple{
+    position:absolute;
+    border-radius:50%;
+    border: 1.5px solid rgba(200,155,95,0.4);
+    opacity:0;
+    pointer-events:none;
+  }
+  .bowl-wrap{
+    position:relative;
+    width: 68%;
+    display:flex; flex-direction:column; align-items:center;
+    cursor: pointer;
+  }
+  .bowl-body{
+    width: 100%;
+    aspect-ratio: 1 / 0.62;
+    border-radius: 50% 50% 46% 46% / 100% 100% 30% 30%;
+    background: radial-gradient(circle at 32% 20%, #e8c98a, #b8874f 45%, #7a4d24 90%);
+    box-shadow:
+      0 25px 45px rgba(0,0,0,0.55),
+      inset 0 -18px 30px rgba(0,0,0,0.35),
+      inset 0 10px 18px rgba(255,235,200,0.25);
+    position:relative;
+    transform-origin: center bottom;
+    transition: transform 0.15s ease;
+  }
+  .bowl-body::before{
+    content:'';
+    position:absolute; left:8%; right:8%; top:10%;
+    height: 30%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 40% 30%, rgba(20,15,10,0.55), transparent 70%);
+  }
+  .bowl-rim-glow{
+    position:absolute; left:0; right:0; top:-2%;
+    height: 14%;
+    border-radius: 50%;
+    background: transparent;
+    box-shadow: 0 0 0px 0px rgba(232,201,138,0);
+    transition: box-shadow 0.3s ease;
+    pointer-events:none;
+  }
+  .bowl-wrap.humming .bowl-rim-glow{
+    box-shadow: 0 0 30px 6px rgba(232,201,138,0.55);
+  }
+  .bowl-wrap.humming .bowl-body{
+    animation: bowlHum 2.6s ease-in-out infinite;
+  }
+  @keyframes bowlHum{
+    0%,100%{ filter: brightness(1); }
+    50%{ filter: brightness(1.15); }
+  }
+  .mallet-round{
+    position:absolute;
+    width: 16px; height: 46px;
+    left: 78%; top: -34px;
+    transform-origin: top center;
+    transform: rotate(-14deg);
+    pointer-events:none;
+    z-index:3;
+    opacity: 0.95;
+  }
+  .mallet-round .stick2{
+    width: 6px; height: 34px; margin:0 auto;
+    background: linear-gradient(#7a5230, #4a3018);
+    border-radius: 3px;
+  }
+  .mallet-round .head2{
+    width: 18px; height: 18px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #d9b98a, #7a5230);
+    margin: -4px auto 0;
+  }
+  .mallet-round.circling{
+    animation: circleRim 1.8s linear infinite;
+  }
+  @keyframes circleRim{
+    0%{ transform: translate(0,0) rotate(-14deg); }
+    25%{ transform: translate(-6px, 2px) rotate(20deg); }
+    50%{ transform: translate(-10px, -2px) rotate(50deg); }
+    75%{ transform: translate(-4px, -4px) rotate(80deg); }
+    100%{ transform: translate(0,0) rotate(110deg); }
+  }
+
+  .hint{
+    margin-top: 34px;
+    font-size: 13px;
+    color: var(--ink-dim);
+    text-align:center;
+    letter-spacing: 0.03em;
+    min-height: 20px;
+    max-width: 280px;
+  }
+
+  .panel{ display:none; flex-direction:column; align-items:center; }
+  .panel.active{ display:flex; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="title">回到这一刻</div>
+
+  <div class="switcher">
+    <button id="btn-gong" class="active">锣</button>
+    <button id="btn-bowl">钵</button>
+  </div>
+
+  <!-- GONG PANEL -->
+  <div class="panel active" id="panel-gong">
+    <div class="instrument-wrap">
+      <div class="gong-scene" id="gongScene">
+        <div class="gong" id="gong"></div>
+        <div class="mallet" id="mallet">
+          <div class="stick"></div>
+          <div class="head"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="gongHint">点一下，让巨响把你拉回此刻</div>
+  </div>
+
+  <!-- BOWL PANEL -->
+  <div class="panel" id="panel-bowl">
+    <div class="instrument-wrap">
+      <div class="bowl-scene" id="bowlScene">
+        <div class="bowl-wrap" id="bowlWrap">
+          <div class="bowl-rim-glow"></div>
+          <div class="bowl-body" id="bowlBody"></div>
+          <div class="mallet-round" id="malletRound">
+            <div class="stick2"></div>
+            <div class="head2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="bowlHint">按住敲一下，或长按让它持续吟唱</div>
+  </div>
+</div>
+
+<script>
+let audioCtx = null;
+function getCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  return audioCtx;
+}
+
+/* ---------------- GONG SOUND ----------------
+   Chinese gong: sharp metallic attack that blooms into a rising-then-falling
+   shimmering wash, with long ringing decay (the "哐——" effect) */
+function playGong(){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.001, now);
+  master.gain.exponentialRampToValueAtTime(1.4, now + 0.008);
+  master.gain.exponentialRampToValueAtTime(0.9, now + 0.35);
+  master.gain.exponentialRampToValueAtTime(0.5, now + 1.8);
+  master.gain.exponentialRampToValueAtTime(0.001, now + 7.5);
+  master.connect(ctx.destination);
+
+  // convolution-style reverb tail via a simple algorithmic IR
+  const convolver = ctx.createConvolver();
+  const irLen = ctx.sampleRate * 3.2;
+  const irBuffer = ctx.createBuffer(2, irLen, ctx.sampleRate);
+  for(let ch=0; ch<2; ch++){
+    const d = irBuffer.getChannelData(ch);
+    for(let i=0;i<irLen;i++){
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/irLen, 2.2);
+    }
+  }
+  convolver.buffer = irBuffer;
+  const reverbGain = ctx.createGain();
+  reverbGain.gain.value = 0.55;
+  master.connect(convolver).connect(reverbGain).connect(ctx.destination);
+
+  // sharp metallic attack transient (the crack of mallet on bronze)
+  const clickBuf = ctx.createBuffer(1, ctx.sampleRate*0.08, ctx.sampleRate);
+  const cd = clickBuf.getChannelData(0);
+  for(let i=0;i<cd.length;i++){ cd[i] = (Math.random()*2-1) * Math.pow(1-i/cd.length, 4); }
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const clickFilter = ctx.createBiquadFilter();
+  clickFilter.type = 'highpass';
+  clickFilter.frequency.value = 1800;
+  const clickGain = ctx.createGain();
+  clickGain.gain.value = 1.2;
+  click.connect(clickFilter).connect(clickGain).connect(master);
+  click.start(now);
+
+  // broadband noise wash (the "crash" body, filtered to sweep like real gong bloom)
+  const bufferSize = ctx.sampleRate * 1.4;
+  const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){
+    data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 1.5);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.Q.value = 0.9;
+  noiseFilter.frequency.setValueAtTime(600, now);
+  noiseFilter.frequency.linearRampToValueAtTime(3200, now + 0.25);
+  noiseFilter.frequency.exponentialRampToValueAtTime(900, now + 2.5);
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.001, now);
+  noiseGain.gain.exponentialRampToValueAtTime(1.3, now + 0.05);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+  noise.connect(noiseFilter).connect(noiseGain).connect(master);
+  noise.start(now);
+
+  // dense inharmonic metallic partials — the shimmering "wah-wah" bronze wash
+  const partials = [
+    62, 94, 121, 148, 176, 203, 241, 279, 318, 362,
+    411, 468, 527, 593, 664, 742, 826, 915, 1010, 1120
+  ];
+  partials.forEach((freq, i)=>{
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    const detune = 1 + (Math.random()-0.5)*0.01;
+    osc.frequency.value = freq * detune;
+
+    // slow beating LFO for that shimmering "wah" gong texture
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.8 + Math.random()*2.2;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = freq * 0.008;
+    lfo.connect(lfoGain).connect(osc.frequency);
+    lfo.start(now);
+    lfo.stop(now + 7);
+
+    const g = ctx.createGain();
+    const amp = 1.1 / Math.pow(i+1, 0.62);
+    const decay = 3 + Math.random()*4.2;
+    const attackTime = 0.015 + i*0.004;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(amp, now + attackTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+    osc.connect(g).connect(master);
+    osc.start(now);
+    osc.stop(now + decay + 0.3);
+  });
+
+  // deep sub thump for weight and body
+  const sub = ctx.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.setValueAtTime(85, now);
+  sub.frequency.exponentialRampToValueAtTime(38, now + 0.4);
+  const subGain = ctx.createGain();
+  subGain.gain.setValueAtTime(1.1, now);
+  subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+  sub.connect(subGain).connect(master);
+  sub.start(now);
+  sub.stop(now+1.5);
+}
+
+/* ---------------- BOWL SOUND ----------------
+   Tibetan singing bowl: pure crystalline fundamental + soft inharmonic
+   shimmer partials + gentle chorus-like beating + airy reverb tail */
+let bowlOsc = [];
+let bowlMaster = null;
+let bowlConvolver = null;
+
+function makeBowlReverb(ctx){
+  const convolver = ctx.createConvolver();
+  const len = ctx.sampleRate * 4.5;
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for(let ch=0; ch<2; ch++){
+    const d = buf.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      // smoother, sparser decay for an airy, spacious tail (not noisy)
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3.5) * 0.6;
+    }
+  }
+  convolver.buffer = buf;
+  const brightener = ctx.createBiquadFilter();
+  brightener.type = 'highshelf';
+  brightener.frequency.value = 2000;
+  brightener.gain.value = 4;
+  convolver.connect(brightener);
+  return { input: convolver, output: brightener };
+}
+
+function startBowlHum(){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  bowlMaster = ctx.createGain();
+  bowlMaster.gain.setValueAtTime(0, now);
+  bowlMaster.gain.linearRampToValueAtTime(0.55, now + 1.1);
+  bowlMaster.connect(ctx.destination);
+
+  bowlConvolver = makeBowlReverb(ctx);
+  const reverbGain = ctx.createGain();
+  reverbGain.gain.value = 0.4;
+  bowlMaster.connect(bowlConvolver.input);
+  bowlConvolver.output.connect(reverbGain).connect(ctx.destination);
+
+  const base = 260; // brighter fundamental — less muffled, more crystalline
+  // real singing bowls: near-fundamental doubled tone (slightly detuned = the "singing" beat) + bright shimmer
+  const partials = [1, 1.004, 2.0, 3.98, 6.02, 8.97, 11.3];
+  const amps =      [0.75, 0.75, 0.30, 0.20, 0.13, 0.08, 0.05];
+
+  partials.forEach((mult, i)=>{
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = base * mult;
+
+    // slow, gentle vibrato — the breathing shimmer of a real bowl
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.12 + i*0.03;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = base * mult * 0.0015;
+    lfo.connect(lfoGain).connect(osc.frequency);
+    lfo.start(now);
+
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(amps[i], now + 0.8 + i*0.15);
+    osc.connect(g).connect(bowlMaster);
+    osc.start(now);
+    bowlOsc.push(osc, lfo);
+  });
+}
+
+function stopBowlHum(){
+  if(!bowlMaster) return;
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  bowlMaster.gain.cancelScheduledValues(now);
+  bowlMaster.gain.setValueAtTime(bowlMaster.gain.value, now);
+  bowlMaster.gain.exponentialRampToValueAtTime(0.0008, now + 3.5);
+  const oscsToStop = bowlOsc;
+  setTimeout(()=>{
+    oscsToStop.forEach(o=>{ try{o.stop();}catch(e){} });
+  }, 3800);
+  bowlOsc = [];
+  bowlMaster = null;
+}
+
+function strikeBowl(){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.75, now + 0.05);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 5.5);
+  g.connect(ctx.destination);
+
+  const reverb = makeBowlReverb(ctx);
+  const reverbGain = ctx.createGain();
+  reverbGain.gain.value = 0.5;
+  g.connect(reverb.input);
+  reverb.output.connect(reverbGain).connect(ctx.destination);
+
+  const base = 260;
+  const partials = [1, 1.004, 2.0, 3.98, 6.02];
+  const amps =      [1, 0.9, 0.32, 0.22, 0.1];
+  partials.forEach((mult,i)=>{
+    const osc = ctx.createOscillator();
+    osc.type='sine';
+    osc.frequency.value = base*mult;
+    const og = ctx.createGain();
+    const decay = 4.5 + i*0.3;
+    og.gain.setValueAtTime(0.0001, now);
+    og.gain.exponentialRampToValueAtTime(amps[i], now + 0.04);
+    og.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+    osc.connect(og).connect(g);
+    osc.start(now);
+    osc.stop(now+decay+0.3);
+  });
+
+  // soft strike transient (mallet touching metal, very gentle)
+  const clickBuf = ctx.createBuffer(1, ctx.sampleRate*0.04, ctx.sampleRate);
+  const cd = clickBuf.getChannelData(0);
+  for(let i=0;i<cd.length;i++){ cd[i]=(Math.random()*2-1)*Math.pow(1-i/cd.length,3); }
+  const click = ctx.createBufferSource();
+  click.buffer = clickBuf;
+  const cf = ctx.createBiquadFilter();
+  cf.type='bandpass'; cf.frequency.value=1400; cf.Q.value=0.7;
+  const cg = ctx.createGain();
+  cg.gain.value = 0.25;
+  click.connect(cf).connect(cg).connect(g);
+  click.start(now);
+}
+
+/* ---------------- UI WIRING ---------------- */
+const btnGong = document.getElementById('btn-gong');
+const btnBowl = document.getElementById('btn-bowl');
+const panelGong = document.getElementById('panel-gong');
+const panelBowl = document.getElementById('panel-bowl');
+
+btnGong.onclick = ()=>{
+  btnGong.classList.add('active'); btnBowl.classList.remove('active');
+  panelGong.classList.add('active'); panelBowl.classList.remove('active');
+  stopBowlHum();
+  document.getElementById('bowlWrap').classList.remove('humming');
+};
+btnBowl.onclick = ()=>{
+  btnBowl.classList.add('active'); btnGong.classList.remove('active');
+  panelBowl.classList.add('active'); panelGong.classList.remove('active');
+};
+
+const gong = document.getElementById('gong');
+const mallet = document.getElementById('mallet');
+const gongScene = document.getElementById('gongScene');
+const gongHint = document.getElementById('gongHint');
+
+function ripple(container, size){
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.width = size+'px';
+  r.style.height = size+'px';
+  r.style.left = '50%';
+  r.style.top = '50%';
+  r.style.marginLeft = (-size/2)+'px';
+  r.style.marginTop = (-size/2)+'px';
+  container.appendChild(r);
+  r.animate([
+    { transform:'scale(0.3)', opacity:0.9 },
+    { transform:'scale(1)', opacity:0 }
+  ], { duration: 900, easing:'ease-out' });
+  setTimeout(()=>r.remove(), 900);
+}
+
+function hitGong(){
+  playGong();
+  mallet.classList.add('swing');
+  gong.classList.add('hit');
+  ripple(gongScene, 260);
+  ripple(gongScene, 260);
+  setTimeout(()=>{ ripple(gongScene, 300); }, 120);
+  gongHint.textContent = '轰——回到这里，回到此刻';
+  setTimeout(()=>{
+    mallet.classList.remove('swing');
+    gong.classList.remove('hit');
+  }, 380);
+  setTimeout(()=>{ gongHint.textContent = '点一下，让巨响把你拉回此刻'; }, 2200);
+}
+gong.addEventListener('pointerdown', hitGong);
+
+const bowlWrap = document.getElementById('bowlWrap');
+const bowlBody = document.getElementById('bowlBody');
+const malletRound = document.getElementById('malletRound');
+const bowlScene = document.getElementById('bowlScene');
+const bowlHint = document.getElementById('bowlHint');
+let bowlHoldTimer = null;
+let isHumming = false;
+
+function bowlRipple(){
+  ripple(bowlScene, 220);
+}
+
+bowlWrap.addEventListener('pointerdown', (e)=>{
+  strikeBowl();
+  bowlRipple();
+  bowlBody.style.transform = 'scale(0.97)';
+  setTimeout(()=>{ bowlBody.style.transform='scale(1)'; }, 150);
+  bowlHint.textContent = '嗡——静静听它散开';
+
+  bowlHoldTimer = setTimeout(()=>{
+    startBowlHum();
+    bowlWrap.classList.add('humming');
+    malletRound.classList.add('circling');
+    isHumming = true;
+    bowlHint.textContent = '钵在吟唱，松开手可以了';
+  }, 500);
+});
+
+function releaseBowl(){
+  clearTimeout(bowlHoldTimer);
+  if(isHumming){
+    stopBowlHum();
+    bowlWrap.classList.remove('humming');
+    malletRound.classList.remove('circling');
+    isHumming = false;
+    setTimeout(()=>{ bowlHint.textContent='按住敲一下，或长按让它持续吟唱'; }, 1200);
+  } else {
+    setTimeout(()=>{ bowlHint.textContent='按住敲一下，或长按让它持续吟唱'; }, 1800);
+  }
+}
+bowlWrap.addEventListener('pointerup', releaseBowl);
+bowlWrap.addEventListener('pointerleave', releaseBowl);
+bowlWrap.addEventListener('pointercancel', releaseBowl);
+</script>
+
+</body>
+</html>
